@@ -3,7 +3,7 @@ using DotNetAPI.Dtos;
 using DotNetAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DotnetAPI.Controllers;
+namespace DotNetAPI.Controllers;
 
 [ApiController]
 [Route("[controller]")]
@@ -26,7 +26,7 @@ public class UserController(IConfiguration config) : ControllerBase
                 Email,
                 Gender,
                 Active 
-            FROM dot_net_api_database.Users";
+            FROM Users";
         IEnumerable<User> users = _dapper.LoadData<User>(sql);
         return users;
     }
@@ -41,7 +41,7 @@ public class UserController(IConfiguration config) : ControllerBase
                 Email,
                 Gender,
                 Active 
-            FROM dot_net_api_database.Users
+            FROM Users
             WHERE UserId = " + userId.ToString(); //"7"
         User user = _dapper.LoadDataSingle<User>(sql);
         return user;
@@ -51,7 +51,7 @@ public class UserController(IConfiguration config) : ControllerBase
     public IActionResult EditUser(User user)
     {
         string sql = @"
-            UPDATE dot_net_api_database.Users
+            UPDATE Users
             SET FirstName = '" + user.FirstName + 
                          "', LastName = '" + user.LastName +
                          "', Email = '" + user.Email + 
@@ -74,7 +74,7 @@ public class UserController(IConfiguration config) : ControllerBase
     public IActionResult AddUser(UserToAddDto user)
     {
         string sql = @"
-            INSERT INTO dot_net_api_database.Users(
+            INSERT INTO Users(
                 FirstName,
                 LastName,
                 Email,
@@ -102,7 +102,7 @@ public class UserController(IConfiguration config) : ControllerBase
     public IActionResult DeleteUser(int userId)
     {
         string sql = @"
-            DELETE FROM dot_net_api_database.Users 
+            DELETE FROM Users 
             WHERE UserId = " + userId.ToString();
         
         Console.WriteLine(sql);
@@ -122,7 +122,7 @@ public class UserController(IConfiguration config) : ControllerBase
         return _dapper.LoadData<UserSalary>(@"
         SELECT UserSalary.UserId
                 , UserSalary.Salary
-        FROM  dot_net_api_database.UserSalary
+        FROM  UserSalary
             WHERE UserId = " + userId.ToString());
     }
 
@@ -130,7 +130,7 @@ public class UserController(IConfiguration config) : ControllerBase
     public IActionResult PostUserSalary(UserSalary userSalaryForInsert)
     {
         string sql = @"
-        INSERT INTO dot_net_api_database.UserSalary (
+        INSERT INTO UserSalary (
             UserId,
             Salary
         ) VALUES (" + userSalaryForInsert.UserId.ToString()
@@ -147,7 +147,7 @@ public class UserController(IConfiguration config) : ControllerBase
     [HttpPut("UserSalary")]
     public IActionResult PutUserSalary(UserSalary userSalaryForUpdate)
     {
-        string sql = "UPDATE dot_net_api_database.UserSalary SET Salary=" 
+        string sql = "UPDATE UserSalary SET Salary=" 
                      + userSalaryForUpdate.Salary
                      + " WHERE UserId=" + userSalaryForUpdate.UserId.ToString();
 
@@ -161,7 +161,7 @@ public class UserController(IConfiguration config) : ControllerBase
     [HttpDelete("UserSalary/{userId:int}")]
     public IActionResult DeleteUserSalary(int userId)
     {
-        string sql = "DELETE FROM dot_net_api_database.UserSalary WHERE UserId=" + userId.ToString();
+        string sql = "DELETE FROM UserSalary WHERE UserId=" + userId.ToString();
 
         if (_dapper.ExecuteSql(sql))
         {
@@ -177,7 +177,7 @@ public class UserController(IConfiguration config) : ControllerBase
         SELECT  UserJobInfo.UserId
                 , UserJobInfo.JobTitle
                 , UserJobInfo.Department
-        FROM  dot_net_api_database.UserJobInfo
+        FROM  UserJobInfo
             WHERE UserId = " + userId.ToString());
     }
 
@@ -185,7 +185,7 @@ public class UserController(IConfiguration config) : ControllerBase
     public IActionResult PostUserJobInfo(UserJobInfo userJobInfoForInsert)
     {
         string sql = @"
-        INSERT INTO dot_net_api_database.UserJobInfo (
+        INSERT INTO UserJobInfo (
             UserId,
             Department,
             JobTitle
@@ -204,7 +204,7 @@ public class UserController(IConfiguration config) : ControllerBase
     [HttpPut("UserJobInfo")]
     public IActionResult PutUserJobInfo(UserJobInfo userJobInfoForUpdate)
     {
-        string sql = "UPDATE dot_net_api_database.UserJobInfo SET Department='" 
+        string sql = "UPDATE UserJobInfo SET Department='" 
                      + userJobInfoForUpdate.Department
                      + "', JobTitle='"
                      + userJobInfoForUpdate.JobTitle
@@ -221,7 +221,7 @@ public class UserController(IConfiguration config) : ControllerBase
     public IActionResult DeleteUserJobInfo(int userId)
     {
         string sql = @"
-        DELETE FROM dot_net_api_database.UserJobInfo 
+        DELETE FROM UserJobInfo 
             WHERE UserId = " + userId.ToString();
 
         if (_dapper.ExecuteSql(sql))

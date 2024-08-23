@@ -1,82 +1,81 @@
 ﻿using DotNetAPI.Data;
 using DotNetAPI.Models;
 
-namespace DotNetAPI.Data
+namespace DotNetAPI.Data;
+
+public class UserRepository(IConfiguration config) : IUserRepository
 {
-    public class UserRepository(IConfiguration config) : IUserRepository
+    DataContextEf _entityFramework = new(config);
+
+    public bool SaveChanges()
     {
-        DataContextEf _entityFramework = new(config);
+        return _entityFramework.SaveChanges() > 0;
+    }
 
-        public bool SaveChanges()
+    // public bool AddEntity<T>(T entityToAdd)
+    public void AddEntity<T>(T entityToAdd)
+    {
+        if (entityToAdd != null)
         {
-            return _entityFramework.SaveChanges() > 0;
+            _entityFramework.Add(entityToAdd);
+            // return true;
         }
+        // return false;
+    }
 
-        // public bool AddEntity<T>(T entityToAdd)
-        public void AddEntity<T>(T entityToAdd)
+    // public bool AddEntity<T>(T entityToAdd)
+    public void RemoveEntity<T>(T entityToAdd)
+    {
+        if (entityToAdd != null)
         {
-            if (entityToAdd != null)
-            {
-                _entityFramework.Add(entityToAdd);
-                // return true;
-            }
-            // return false;
+            _entityFramework.Remove(entityToAdd);
+            // return true;
         }
+        // return false;
+    }
 
-        // public bool AddEntity<T>(T entityToAdd)
-        public void RemoveEntity<T>(T entityToAdd)
+    public IEnumerable<User> GetUsers()
+    {
+        IEnumerable<User> users = _entityFramework.Users.ToList<User>();
+        return users;
+    }
+
+    public User GetSingleUser(int userId)
+    {
+        User? user = _entityFramework.Users
+            .FirstOrDefault(u => u.UserId == userId);
+
+        if (user != null)
         {
-            if (entityToAdd != null)
-            {
-                _entityFramework.Remove(entityToAdd);
-                // return true;
-            }
-            // return false;
+            return user;
         }
-
-        public IEnumerable<User> GetUsers()
-        {
-            IEnumerable<User> users = _entityFramework.Users.ToList<User>();
-            return users;
-        }
-
-        public User GetSingleUser(int userId)
-        {
-            User? user = _entityFramework.Users
-                .FirstOrDefault(u => u.UserId == userId);
-
-            if (user != null)
-            {
-                return user;
-            }
             
-            throw new Exception("Failed to Get User");
-        }
+        throw new Exception("Failed to Get User");
+    }
 
-        public UserSalary GetSingleUserSalary(int userId)
+    public UserSalary GetSingleUserSalary(int userId)
+    {
+        UserSalary? userSalary = _entityFramework.UserSalary
+            .FirstOrDefault(u => u.UserId == userId);
+
+        if (userSalary != null)
         {
-            UserSalary? userSalary = _entityFramework.UserSalary
-                .FirstOrDefault(u => u.UserId == userId);
-
-            if (userSalary != null)
-            {
-                return userSalary;
-            }
-            
-            throw new Exception("Failed to Get User");
+            return userSalary;
         }
+            
+        throw new Exception("Failed to Get User");
+    }
 
-        public UserJobInfo GetSingleUserJobInfo(int userId)
+    public UserJobInfo GetSingleUserJobInfo(int userId)
+    {
+        UserJobInfo? userJobInfo = _entityFramework.UserJobInfo
+            .FirstOrDefault(u => u.UserId == userId);
+
+        if (userJobInfo != null)
         {
-            UserJobInfo? userJobInfo = _entityFramework.UserJobInfo
-                .FirstOrDefault(u => u.UserId == userId);
-
-            if (userJobInfo != null)
-            {
-                return userJobInfo;
-            }
-            
-            throw new Exception("Failed to Get User");
+            return userJobInfo;
         }
+            
+        throw new Exception("Failed to Get User");
     }
 }
