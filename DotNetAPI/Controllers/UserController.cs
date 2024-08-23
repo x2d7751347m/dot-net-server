@@ -12,8 +12,10 @@ public class UserController(IConfiguration config) : ControllerBase
     DataContextDapper _dapper = new(config);
 
     [HttpGet("TestConnection")]
-    public DateTime TestConnection()
+    public DateTime TestConnection([FromHeader(Name = "X-Custom-Header")] string? customHeader)
     {
+        var customHeaderValue = HttpContext.Request.Headers["X-Custom-Header"].FirstOrDefault() ?? "";
+        Response.Headers.Append("X-Custom-Header", customHeaderValue);
         return _dapper.LoadDataSingle<DateTime>("SELECT NOW()");
     }
 
