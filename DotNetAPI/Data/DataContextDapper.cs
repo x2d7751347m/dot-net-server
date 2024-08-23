@@ -12,7 +12,7 @@ internal class DataContextDapper(IConfiguration config)
         return dbConnection.Query<T>(sql);
     }
 
-    public IEnumerable<T> LoadData<T, U>(string sql, U parameters)
+    public IEnumerable<T> LoadData<T, TU>(string sql, TU parameters)
     {
         using IDbConnection dbConnection = new MySqlConnection(config.GetConnectionString("DefaultConnection"));
         return dbConnection.Query<T>(sql, parameters);
@@ -22,6 +22,12 @@ internal class DataContextDapper(IConfiguration config)
     {
         IDbConnection dbConnection = new MySqlConnection(config.GetConnectionString("DefaultConnection"));
         return dbConnection.QuerySingle<T>(sql);
+    }
+
+    public T LoadDataSingle<T, TU>(string sql, TU parameters)
+    {
+        IDbConnection dbConnection = new MySqlConnection(config.GetConnectionString("DefaultConnection"));
+        return dbConnection.QuerySingle<T>(sql, parameters);
     }
 
     public bool ExecuteSql(string sql)
@@ -36,17 +42,27 @@ internal class DataContextDapper(IConfiguration config)
         return dbConnection.Execute(sql);
     }
 
-    public bool ExecuteSqlWithParameters(string sql, List<MySqlParameter> parameters)
+    public bool ExecuteSqlWithParameters(string sql, DynamicParameters parameters)
     {
         using MySqlConnection dbConnection = new MySqlConnection(config.GetConnectionString("DefaultConnection"));
-        using MySqlCommand commandWithParams = new MySqlCommand(sql, dbConnection);
-        foreach (MySqlParameter parameter in parameters)
-        {
-            commandWithParams.Parameters.Add(parameter);
-        }
+        return dbConnection.Execute(sql, parameters) > 0;
+    }
 
-        dbConnection.Open();
-        int rowsAffected = commandWithParams.ExecuteNonQuery();
-        return rowsAffected > 0;
+    public bool ExecuteSqlWithParameters<T, TU>(string sql, TU parameters)
+    {
+        using MySqlConnection dbConnection = new MySqlConnection(config.GetConnectionString("DefaultConnection"));
+        return dbConnection.Execute(sql, parameters) > 0;
+    }
+    
+    public IEnumerable<T> LoadDataWithParameters<T>(string sql, DynamicParameters parameters)
+    {
+        IDbConnection dbConnection = new MySqlConnection(config.GetConnectionString("DefaultConnection"));
+        return dbConnection.Query<T>(sql, parameters);
+    }
+
+    public T LoadDataSingleWithParameters<T>(string sql, DynamicParameters parameters)
+    {
+        IDbConnection dbConnection = new MySqlConnection(config.GetConnectionString("DefaultConnection"));
+        return dbConnection.QuerySingle<T>(sql, parameters);
     }
 }

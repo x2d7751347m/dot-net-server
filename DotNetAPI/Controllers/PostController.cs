@@ -1,4 +1,6 @@
-﻿using DotNetAPI.Data;
+﻿using System.Data;
+using Dapper;
+using DotNetAPI.Data;
 using DotNetAPI.Dtos;
 using DotNetAPI.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -43,7 +45,7 @@ public class PostController : ControllerBase
                 FROM Posts
                     WHERE PostId = @PostId";
                 
-        return _dapper.LoadDataSingle<Post>(sql, new { PostId = postId });
+        return _dapper.LoadDataSingle<Post, dynamic>(sql, new { PostId = postId });
     }
 
     [HttpGet("PostsByUser/{userId}")]
@@ -58,7 +60,7 @@ public class PostController : ControllerBase
                 FROM Posts
                     WHERE UserId = @UserId";
                 
-        return _dapper.LoadData<Post>(sql, new { UserId = userId });
+        return _dapper.LoadData<Post, dynamic>(sql, new { UserId = userId });
     }
 
     [HttpGet("MyPosts")]
@@ -73,7 +75,7 @@ public class PostController : ControllerBase
                 FROM Posts
                     WHERE UserId = @UserId";
                 
-        return _dapper.LoadData<Post>(sql, new { UserId = this.User.FindFirst("userId")?.Value });
+        return _dapper.LoadData<Post, dynamic>(sql, new { UserId = this.User.FindFirst("userId")?.Value });
     }
 
     [HttpGet("PostsBySearch/{searchParam}")]
@@ -89,7 +91,7 @@ public class PostController : ControllerBase
                     WHERE PostTitle LIKE @SearchParam
                         OR PostContent LIKE @SearchParam";
                 
-        return _dapper.LoadData<Post>(sql, new { SearchParam = $"%{searchParam}%" });
+        return _dapper.LoadData<Post, dynamic>(sql, new { SearchParam = $"%{searchParam}%" });
     }
 
     [HttpPost("Post")]
@@ -107,15 +109,14 @@ public class PostController : ControllerBase
                 @PostContent,
                 NOW(),
                 NOW())";
+        
+        DynamicParameters sqlParameters = new DynamicParameters();
 
-        var parameters = new 
-        {
-            UserId = this.User.FindFirst("userId")?.Value,
-            postToAdd.PostTitle,
-            postToAdd.PostContent
-        };
-
-        if (_dapper.ExecuteSqlWithParameters(sql, parameters))
+        sqlParameters.Add("@UserId", User.FindFirst("userId")?.Value, DbType.String);
+        sqlParameters.Add("@PostTitle", postToAdd.PostTitle, DbType.String);
+        sqlParameters.Add("@PostContent", postToAdd.PostContent, DbType.String);
+        
+        if (_dapper.ExecuteSqlWithParameters(sql, sqlParameters))
         {
             return Ok();
         }
@@ -133,16 +134,15 @@ public class PostController : ControllerBase
                     PostUpdated = NOW()
                 WHERE PostId = @PostId
                 AND UserId = @UserId";
+        
+        DynamicParameters sqlParameters = new DynamicParameters();
 
-        var parameters = new 
-        {
-            postToEdit.PostContent,
-            postToEdit.PostTitle,
-            postToEdit.PostId,
-            UserId = this.User.FindFirst("userId")?.Value
-        };
+        sqlParameters.Add("@PostContent", postToEdit.PostContent, DbType.String);
+        sqlParameters.Add("@PostTitle", postToEdit.PostTitle, DbType.String);
+        sqlParameters.Add("@PostId", postToEdit.PostId, DbType.String);
+        sqlParameters.Add("@UserId", User.FindFirst("userId")?.Value, DbType.String);
 
-        if (_dapper.ExecuteSqlWithParameters(sql, parameters))
+        if (_dapper.ExecuteSqlWithParameters(sql, sqlParameters))
         {
             return Ok();
         }
@@ -156,14 +156,13 @@ public class PostController : ControllerBase
         string sql = @"DELETE FROM Posts 
                 WHERE PostId = @PostId
                 AND UserId = @UserId";
+        
+        DynamicParameters sqlParameters = new DynamicParameters();
 
-        var parameters = new 
-        {
-            PostId = postId,
-            UserId = this.User.FindFirst("userId")?.Value
-        };
+        sqlParameters.Add("@PostId", postId, DbType.String);
+        sqlParameters.Add("@UserId", User.FindFirst("userId")?.Value, DbType.String);
             
-        if (_dapper.ExecuteSqlWithParameters(sql, parameters))
+        if (_dapper.ExecuteSqlWithParameters(sql, sqlParameters))
         {
             return Ok();
         }

@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Dapper;
 using DotNetAPI.Data;
 using DotNetAPI.Dtos;
 using DotNetAPI.Helpers;
@@ -39,30 +40,39 @@ namespace DotNetAPI.Controllers
                 var parameters = new { Email = userForRegistration.Email };
 
                 IEnumerable<string> existingUsers = _dapper.LoadData<string, dynamic>(sqlCheckUserExists, parameters);
-                if (existingUsers.Count() == 0)
+                if (existingUsers.Any()) throw new Exception("User with this email already exists!");
+                byte[] passwordSalt = new byte[128 / 8];
+                using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
                 {
-                    byte[] passwordSalt = new byte[128 / 8];
-                    using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
-                    {
-                        rng.GetNonZeroBytes(passwordSalt);
-                    }
+                    rng.GetNonZeroBytes(passwordSalt);
+                }
 
-                    byte[] passwordHash = _authHelper.GetPasswordHash(userForRegistration.Password, passwordSalt);
+                byte[] passwordHash = _authHelper.GetPasswordHash(userForRegistration.Password, passwordSalt);
 
-                    string sqlAddAuth = @"
+                string sqlAddAuth = @"
                         INSERT INTO Auth (Email, PasswordHash, PasswordSalt) 
                         VALUES (@Email, @PasswordHash, @PasswordSalt)";
-
-                    var authParameters = new 
-                    {
-                        Email = userForRegistration.Email,
-                        PasswordHash = passwordHash,
-                        PasswordSalt = passwordSalt
-                    };
-
-                    if (_dapper.ExecuteSqlWithParameters(sqlAddAuth, authParameters))
-                    {
-                        string sqlAddUser = @"
+                
+                DynamicParameters sqlParameters = new DynamicParameters();
+                
+                var authParameters = new 
+                {
+                    Email = userForRegistration.Email,
+                    PasswordHash = passwordHash,
+                    PasswordSalt = passwordSalt
+                };
+                
+                if (!_dapper.ExecuteSqlWithParameters<string, dynamic>(sqlAddAuth, authParameters))
+                    
+                // using sqlParameters
+                // sqlParameters.Add("@Email", userForRegistration.Email, DbType.String);
+                // sqlParameters.Add("@PasswordHash", passwordHash, DbType.Binary);
+                // sqlParameters.Add("@PasswordSalt", passwordSalt, DbType.Binary);
+                //
+                // if (!_dapper.ExecuteSqlWithParameters(sqlAddAuth, sqlParameters))
+                    throw new Exception("Failed to register user.");
+                    
+                string sqlAddUser = @"
                             INSERT INTO Users(
                                 FirstName,
                                 LastName,
@@ -75,24 +85,19 @@ namespace DotNetAPI.Controllers
                                 @Email,
                                 @Gender,
                                 1)";
+                    
+                sqlParameters = new DynamicParameters();
 
-                        var userParameters = new
-                        {
-                            FirstName = userForRegistration.FirstName,
-                            LastName = userForRegistration.LastName,
-                            Email = userForRegistration.Email,
-                            Gender = userForRegistration.Gender
-                        };
+                sqlParameters.Add("@FirstName", userForRegistration.FirstName, DbType.String);
+                sqlParameters.Add("@LastName", userForRegistration.LastName, DbType.String);
+                sqlParameters.Add("@Email", userForRegistration.Email, DbType.String);
+                sqlParameters.Add("@Gender", userForRegistration.Gender, DbType.String);
 
-                        if (_dapper.ExecuteSqlWithParameters(sqlAddUser, userParameters))
-                        {
-                            return Ok();
-                        }
-                        throw new Exception("Failed to add user.");
-                    }
-                    throw new Exception("Failed to register user.");
+                if (_dapper.ExecuteSqlWithParameters(sqlAddUser, sqlParameters))
+                {
+                    return Ok();
                 }
-                throw new Exception("User with this email already exists!");
+                throw new Exception("Failed to add user.");
             }
             throw new Exception("Passwords do not match!");
         }
@@ -122,7 +127,7 @@ namespace DotNetAPI.Controllers
             string userIdSql = @"
                 SELECT UserId FROM Users WHERE Email = @Email";
 
-            int userId = _dapper.LoadDataSingle<int>(userIdSql, parameters);
+            int userId = _dapper.LoadDataSingle<int, dynamic>(userIdSql, parameters);
 
             return Ok(new Dictionary<string, string> {
                 {"token", _authHelper.CreateToken(userId)}
@@ -137,7 +142,7 @@ namespace DotNetAPI.Controllers
             
             var parameters = new { UserId = User.FindFirst("userId")?.Value };
 
-            int userId = _dapper.LoadDataSingle<int>(userIdSql, parameters);
+            int userId = _dapper.LoadDataSingle<int, dynamic>(userIdSql, parameters);
 
             return _authHelper.CreateToken(userId);
         }

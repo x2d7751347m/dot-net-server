@@ -1,5 +1,7 @@
 USE dot_net_api_database;
 
+DROP TABLE IF EXISTS Users;
+
 CREATE TABLE Users (
                        UserId INT AUTO_INCREMENT PRIMARY KEY,
                        FirstName VARCHAR(50),
@@ -11,11 +13,15 @@ CREATE TABLE Users (
 
 CREATE INDEX idx_Users_Active ON Users (Active, Email, FirstName, LastName, Gender) WHERE active = 1;
 
+DROP TABLE IF EXISTS UserSalary;
+
 CREATE TABLE UserSalary (
                             UserId INT,
                             Salary DECIMAL(18, 4),
                             INDEX idx_UserSalary_UserId (UserId)
 );
+
+DROP TABLE IF EXISTS UserJobInfo;
 
 CREATE TABLE UserJobInfo (
                              UserId INT,
@@ -24,11 +30,15 @@ CREATE TABLE UserJobInfo (
                              INDEX idx_UserJobInfo_JobTitle (JobTitle, Department)
 );
 
+DROP TABLE IF EXISTS Auth;
+
 CREATE TABLE Auth (
                       Email VARCHAR(50) PRIMARY KEY,
                       PasswordHash BLOB,
                       PasswordSalt BLOB
 );
+
+DROP TABLE IF EXISTS Posts;
 
 CREATE TABLE Posts (
                        PostId INT AUTO_INCREMENT PRIMARY KEY,
