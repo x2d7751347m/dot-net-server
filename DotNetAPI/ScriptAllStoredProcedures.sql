@@ -1,8 +1,8 @@
 USE DotNetCourseDatabase;
 GO
 
-CREATE OR ALTER PROCEDURE TutorialAppSchema.spUsers_Get
-/*EXEC TutorialAppSchema.spUsers_Get @UserId=3*/
+CREATE OR ALTER PROCEDURE spUsers_Get
+/*EXEC spUsers_Get @UserId=3*/
     @UserId INT = NULL
     , @Active BIT = NULL
 AS
@@ -12,10 +12,10 @@ BEGIN
     SELECT UserJobInfo.Department
         , AVG(UserSalary.Salary) AvgSalary
         INTO #AverageDeptSalary
-    FROM TutorialAppSchema.Users AS Users 
-        LEFT JOIN TutorialAppSchema.UserSalary AS UserSalary
+    FROM Users AS Users 
+        LEFT JOIN UserSalary AS UserSalary
             ON UserSalary.UserId = Users.UserId
-        LEFT JOIN TutorialAppSchema.UserJobInfo AS UserJobInfo
+        LEFT JOIN UserJobInfo AS UserJobInfo
             ON UserJobInfo.UserId = Users.UserId
         GROUP BY UserJobInfo.Department
 
@@ -31,10 +31,10 @@ BEGIN
         UserJobInfo.Department,
         UserJobInfo.JobTitle,
         AvgSalary.AvgSalary
-    FROM TutorialAppSchema.Users AS Users 
-        LEFT JOIN TutorialAppSchema.UserSalary AS UserSalary
+    FROM Users AS Users 
+        LEFT JOIN UserSalary AS UserSalary
             ON UserSalary.UserId = Users.UserId
-        LEFT JOIN TutorialAppSchema.UserJobInfo AS UserJobInfo
+        LEFT JOIN UserJobInfo AS UserJobInfo
             ON UserJobInfo.UserId = Users.UserId
         LEFT JOIN #AverageDeptSalary AS AvgSalary
             ON AvgSalary.Department = UserJobInfo.Department
@@ -43,7 +43,7 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE TutorialAppSchema.spUser_Upsert
+CREATE OR ALTER PROCEDURE spUser_Upsert
 	@FirstName NVARCHAR(50),
 	@LastName NVARCHAR(50),
 	@Email NVARCHAR(50),
@@ -55,13 +55,13 @@ CREATE OR ALTER PROCEDURE TutorialAppSchema.spUser_Upsert
 	@UserId INT = NULL
 AS
 BEGIN
-    IF NOT EXISTS (SELECT * FROM TutorialAppSchema.Users WHERE UserId = @UserId)
+    IF NOT EXISTS (SELECT * FROM Users WHERE UserId = @UserId)
         BEGIN
-        IF NOT EXISTS (SELECT * FROM TutorialAppSchema.Users WHERE Email = @Email)
+        IF NOT EXISTS (SELECT * FROM Users WHERE Email = @Email)
             BEGIN
                 DECLARE @OutputUserId INT
 
-                INSERT INTO TutorialAppSchema.Users(
+                INSERT INTO Users(
                     [FirstName],
                     [LastName],
                     [Email],
@@ -77,7 +77,7 @@ BEGIN
 
                 SET @OutputUserId = @@IDENTITY
 
-                INSERT INTO TutorialAppSchema.UserSalary(
+                INSERT INTO UserSalary(
                     UserId,
                     Salary
                 ) VALUES (
@@ -85,7 +85,7 @@ BEGIN
                     @Salary
                 )
 
-                INSERT INTO TutorialAppSchema.UserJobInfo(
+                INSERT INTO UserJobInfo(
                     UserId,
                     Department,
                     JobTitle
@@ -98,7 +98,7 @@ BEGIN
         END
     ELSE 
         BEGIN
-            UPDATE TutorialAppSchema.Users 
+            UPDATE Users 
                 SET FirstName = @FirstName,
                     LastName = @LastName,
                     Email = @Email,
@@ -106,11 +106,11 @@ BEGIN
                     Active = @Active
                 WHERE UserId = @UserId
 
-            UPDATE TutorialAppSchema.UserSalary
+            UPDATE UserSalary
                 SET Salary = @Salary
                 WHERE UserId = @UserId
 
-            UPDATE TutorialAppSchema.UserJobInfo
+            UPDATE UserJobInfo
                 SET Department = @Department,
                     JobTitle = @JobTitle
                 WHERE UserId = @UserId
@@ -118,35 +118,35 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE TutorialAppSchema.spUser_Delete
+CREATE OR ALTER PROCEDURE spUser_Delete
     @UserId INT
 AS
 BEGIN
     DECLARE @Email NVARCHAR(50);
 
     SELECT  @Email = Users.Email
-      FROM  TutorialAppSchema.Users
+      FROM  Users
      WHERE  Users.UserId = @UserId;
 
-    DELETE  FROM TutorialAppSchema.UserSalary
+    DELETE  FROM UserSalary
      WHERE  UserSalary.UserId = @UserId;
 
-    DELETE  FROM TutorialAppSchema.UserJobInfo
+    DELETE  FROM UserJobInfo
      WHERE  UserJobInfo.UserId = @UserId;
 
-    DELETE  FROM TutorialAppSchema.Users
+    DELETE  FROM Users
      WHERE  Users.UserId = @UserId;
 
-    DELETE  FROM TutorialAppSchema.Auth
+    DELETE  FROM Auth
      WHERE  Auth.Email = @Email;
 END;
 GO
 
 
 
-CREATE OR ALTER PROCEDURE TutorialAppSchema.spPosts_Get
-/*EXEC TutorialAppSchema.spPosts_Get @UserId = 1003, @SearchValue='Second'*/
-/*EXEC TutorialAppSchema.spPosts_Get @PostId = 2*/
+CREATE OR ALTER PROCEDURE spPosts_Get
+/*EXEC spPosts_Get @UserId = 1003, @SearchValue='Second'*/
+/*EXEC spPosts_Get @PostId = 2*/
     @UserId INT = NULL
     , @SearchValue NVARCHAR(MAX) = NULL
     , @PostId INT = NULL
@@ -158,7 +158,7 @@ BEGIN
         [Posts].[PostContent],
         [Posts].[PostCreated],
         [Posts].[PostUpdated] 
-    FROM TutorialAppSchema.Posts AS Posts
+    FROM Posts AS Posts
         WHERE Posts.UserId = ISNULL(@UserId, Posts.UserId)
             AND Posts.PostId = ISNULL(@PostId, Posts.PostId)
             AND (@SearchValue IS NULL
@@ -167,16 +167,16 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE TutorialAppSchema.spPosts_Upsert
+CREATE OR ALTER PROCEDURE spPosts_Upsert
     @UserId INT
     , @PostTitle NVARCHAR(255)
     , @PostContent NVARCHAR(MAX)
     , @PostId INT = NULL
 AS
 BEGIN
-    IF NOT EXISTS (SELECT * FROM TutorialAppSchema.Posts WHERE PostId = @PostId)
+    IF NOT EXISTS (SELECT * FROM Posts WHERE PostId = @PostId)
         BEGIN
-            INSERT INTO TutorialAppSchema.Posts(
+            INSERT INTO Posts(
                 [UserId],
                 [PostTitle],
                 [PostContent],
@@ -192,7 +192,7 @@ BEGIN
         END
     ELSE
         BEGIN
-            UPDATE TutorialAppSchema.Posts 
+            UPDATE Posts 
                 SET PostTitle = @PostTitle,
                     PostContent = @PostContent,
                     PostUpdated = GETDATE()
@@ -201,12 +201,12 @@ BEGIN
 END
 GO
 
-CREATE OR ALTER PROCEDURE TutorialAppSchema.spPost_Delete
+CREATE OR ALTER PROCEDURE spPost_Delete
     @PostId INT
     , @UserId INT 
 AS
 BEGIN
-    DELETE FROM TutorialAppSchema.Posts 
+    DELETE FROM Posts 
         WHERE PostId = @PostId
             AND UserId = @UserId
 END
@@ -214,26 +214,26 @@ GO
 
 
 
-CREATE OR ALTER PROCEDURE TutorialAppSchema.spLoginConfirmation_Get
+CREATE OR ALTER PROCEDURE spLoginConfirmation_Get
     @Email NVARCHAR(50)
 AS
 BEGIN
     SELECT [Auth].[PasswordHash],
         [Auth].[PasswordSalt] 
-    FROM TutorialAppSchema.Auth AS Auth 
+    FROM Auth AS Auth 
         WHERE Auth.Email = @Email
 END;
 GO
 
-CREATE OR ALTER PROCEDURE TutorialAppSchema.spRegistration_Upsert
+CREATE OR ALTER PROCEDURE spRegistration_Upsert
     @Email NVARCHAR(50),
     @PasswordHash VARBINARY(MAX),
     @PasswordSalt VARBINARY(MAX)
 AS 
 BEGIN
-    IF NOT EXISTS (SELECT * FROM TutorialAppSchema.Auth WHERE Email = @Email)
+    IF NOT EXISTS (SELECT * FROM Auth WHERE Email = @Email)
         BEGIN
-            INSERT INTO TutorialAppSchema.Auth(
+            INSERT INTO Auth(
                 [Email],
                 [PasswordHash],
                 [PasswordSalt]
@@ -245,7 +245,7 @@ BEGIN
         END
     ELSE
         BEGIN
-            UPDATE TutorialAppSchema.Auth 
+            UPDATE Auth 
                 SET PasswordHash = @PasswordHash,
                     PasswordSalt = @PasswordSalt
                 WHERE Email = @Email
