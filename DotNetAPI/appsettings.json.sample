@@ -8,5 +8,9 @@
   "AllowedHosts": "*",
   "ConnectionStrings": {
     "DefaultConnection": "Server=localhost;Database=Dot_Net_Api_Database;User=;Password=;"
+  },
+  "AppSettings": {
+    "PasswordKey": "",
+    "TokenKey": ""
   }
 }
