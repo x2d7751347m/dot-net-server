@@ -40,21 +40,21 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer"
     });
 
-    // options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    // {
-    //     {
-    //         new OpenApiSecurityScheme
-    //         {
-    //             
-    //             Reference = new OpenApiReference
-    //             {
-    //                 Type = ReferenceType.SecurityScheme,
-    //                 Id = "Bearer"
-    //             }
-    //         },
-    //         Array.Empty<string>()
-    //     }
-    // });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 builder.Services.AddCors((options) =>
