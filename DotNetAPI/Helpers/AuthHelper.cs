@@ -22,7 +22,6 @@ public class AuthHelper(IConfiguration config)
         );
     }
 
-
     public string CreateToken(int userId)
     {
         Claim[] claims = {

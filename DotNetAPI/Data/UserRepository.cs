@@ -56,7 +56,7 @@ public class UserRepository(IConfiguration config) : IUserRepository
     public UserSalary GetSingleUserSalary(int userId)
     {
         UserSalary? userSalary = _entityFramework.UserSalary
-            .FirstOrDefault(u => u.UserId == userId);
+            .
 
         if (userSalary != null)
         {
